@@ -6,14 +6,8 @@ export async function POST(req: Request) {
   try {
     const { email } = await req.json();
 
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      return NextResponse.json(
-        { message: "MOCK_OTP", otp: "123456" },
-        { status: 200 }
-      );
-    }
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const useMock = !process.env.EMAIL_USER || !process.env.EMAIL_PASS;
+    const otp = useMock ? "123456" : Math.floor(100000 + Math.random() * 900000).toString();
     const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
 
     // Upsert the verification token in the database
@@ -33,6 +27,13 @@ export async function POST(req: Request) {
         expires,
       },
     });
+
+    if (useMock) {
+      return NextResponse.json(
+        { message: "MOCK_OTP", otp: "123456" },
+        { status: 200 }
+      );
+    }
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
